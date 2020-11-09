@@ -1,5 +1,6 @@
 import React, { Fragment, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import jQuery from 'jquery';
 import DocumentTitle  from 'react-document-title';
 
 import config from './../helpers/Config';
@@ -11,6 +12,7 @@ import TopSales from './../sections/TopSales';
 const ProductDetail = () => {
 
   useEffect ( () => {
+    jQuery('.zoomContainer').remove();
     appendScript(`${config.assets_url}js/main.js`);
   },[]); 
 

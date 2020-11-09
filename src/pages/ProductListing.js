@@ -1,23 +1,83 @@
 import React, { useEffect } from 'react';
 import jQuery from 'jquery';
-import { Link } from 'react-router-dom';
+//import { Redirect } from 'react-router';
+import { createBrowserHistory } from 'history';
+import { Link, Redirect, useHistory  } from 'react-router-dom';
 import DocumentTitle  from 'react-document-title';
 
 import config from '../helpers/Config';
 import { appendScript }  from '../helpers/Utilities';
 
-const ProductListing = () => {
+const ProductListing = ({match}) => {
+
+   const historyBrowser = createBrowserHistory();
+   historyBrowser.listen(() => {
+      //console.log("ooh, a navigation!");
+   });
+
+   const generateUrl = () => {
+      let parameters = {};
+
+      jQuery('ul[data-name].ps-list--checked > li.current').each(function (){
+         
+         const name = jQuery(this).parent('ul').attr('data-name');
+         const id = jQuery(this).attr('data-id');
+         
+        if ( name  in parameters){
+            parameters[name] = parameters[name].concat(','+id);
+        }else{
+            parameters[name] = id;
+        } 
+
+      });
+
+      let parameter_url = new Array();
+      for (const [ky, value] of Object.entries(parameters)) {
+         parameter_url.push(`${ky}-${value}`);
+      }
+
+      parameter_url = parameter_url.join(':');
+      historyBrowser.push(`/product-listing/${parameter_url}`);
+
+      //console.log(parameter_url.join('|'));
+      //historyBrowser.push(`/product-listing/${name}-${id},brand-1`);
+   }
 
    useEffect ( () => {
-       appendScript(`${config.assets_url}js/main.js`);
+
+      console.log(match);
+      jQuery('.zoomContainer').remove();
+
+      appendScript(`${config.assets_url}js/main.js`);
 
        jQuery('.table.ps-table--size td').click(function (){
-            jQuery(this).closest('.table').find('td').removeClass('active');
-            jQuery(this).addClass('active');
+            //jQuery(this).closest('.table').find('td').removeClass('active');
+            jQuery(this).toggleClass('active');
+       });
+
+       jQuery('ul[data-name].ps-list--checked > li').click(function (){
+            jQuery(this).toggleClass('current');
+            generateUrl();
+
+            /* const name = jQuery(this).parent('ul').attr('data-name');
+            const id = jQuery(this).attr('data-id');
+   
+            const history = createBrowserHistory();
+            history.listen(() => {
+               //console.log("ooh, a navigation!");
+            });
+            history.push(`/product-listing/${name}-${id},brand-1`); */
        });
 
     },[]);  
     
+    const history = useHistory();
+    const goProductDetail = () =>{
+
+      history.push('/product-detail/1');
+      //return <Redirect to="/product-detail/1" />
+    }
+
     return (
        <DocumentTitle title="Product Listing">
             <div className="ps-products-wrap pt-80 pb-80">
@@ -96,23 +156,23 @@ const ProductListing = () => {
                <div className="ps-sidebar" data-mh="product-listing">
                   <aside className="ps-widget--sidebar ps-widget--category">
                      <div className="ps-widget__header">
-                     <h3>Category</h3>
+                     <h3 onClick={ () => goProductDetail() }>Category</h3>
                      </div>
                      <div className="ps-widget__content">
-                     <ul className="ps-list--checked">
-                        <li className="current"><a href="product-listing.html">Life(521)</a></li>
-                        <li><a href="product-listing.html">Running(76)</a></li>
-                        <li><a href="product-listing.html">Baseball(21)</a></li>
-                        <li><a href="product-listing.html">Football(105)</a></li>
-                        <li><a href="product-listing.html">Soccer(108)</a></li>
-                        <li><a href="product-listing.html">Trainning & game(47)</a></li>
-                        <li><a href="product-listing.html">More</a></li>
+                     <ul className="ps-list--checked" data-name="category">
+                        <li className="current" data-id="1"><a href="#">Life(521)</a></li>
+                        <li data-id="2"><a href="#">Running(76)</a></li>
+                        <li data-id="3"><a href="#">Baseball(21)</a></li>
+                        <li data-id="4"><a href="#">Football(105)</a></li>
+                        <li data-id="5"><a href="#">Soccer(108)</a></li>
+                        <li data-id="6"><a href="#">Trainning & game(47)</a></li>
+                        <li data-id="3"><a href="#">More</a></li>
                      </ul>
                      </div>
                   </aside>
                   <aside className="ps-widget--sidebar ps-widget--filter">
                      <div className="ps-widget__header">
-                     <h3>Category</h3>
+                     <h3>Price</h3>
                      </div>
                      <div className="ps-widget__content">
                      <div className="ac-slider" data-default-min="300" data-default-max="2000" data-max="3450" data-step="50" data-unit="$"></div>
@@ -124,30 +184,30 @@ const ProductListing = () => {
                      <h3>Sky Brand</h3>
                      </div>
                      <div className="ps-widget__content">
-                     <ul className="ps-list--checked">
-                        <li className="current"><a href="product-listing.html">Nike(521)</a></li>
-                        <li><a href="product-listing.html">Adidas(76)</a></li>
-                        <li><a href="product-listing.html">Baseball(69)</a></li>
-                        <li><a href="product-listing.html">Gucci(36)</a></li>
-                        <li><a href="product-listing.html">Dior(108)</a></li>
-                        <li><a href="product-listing.html">B&G(108)</a></li>
-                        <li><a href="product-listing.html">Louis Vuiton(47)</a></li>
+                     <ul className="ps-list--checked" data-name="brand">
+                        <li className="current"  data-id="1"><a href="#">Nike(521)</a></li>
+                        <li data-id="2"><a href="#">Adidas(76)</a></li>
+                        <li data-id="3"><a href="#">Baseball(69)</a></li>
+                        <li data-id="4"><a href="#">Gucci(36)</a></li>
+                        <li data-id="5"><a href="#">Dior(108)</a></li>
+                        <li data-id="6"><a href="#">B&G(108)</a></li>
+                        <li data-id="17"><a href="#">Louis Vuiton(47)</a></li>
                      </ul>
                      </div>
                   </aside>
-                  <aside className="ps-widget--sidebar ps-widget--category">
+                 {/*  <aside className="ps-widget--sidebar ps-widget--category">
                      <div className="ps-widget__header">
                      <h3>Width</h3>
                      </div>
                      <div className="ps-widget__content">
                      <ul className="ps-list--checked">
-                        <li className="current"><a href="product-listing.html">Narrow</a></li>
-                        <li><a href="product-listing.html">Regular</a></li>
-                        <li><a href="product-listing.html">Wide</a></li>
-                        <li><a href="product-listing.html">Extra Wide</a></li>
+                        <li className="current"><Link to="#">Narrow</Link></li>
+                        <li><Link to="#">Regular</Link></li>
+                        <li><Link to="#">Wide</Link></li>
+                        <li><Link to="#">Extra Wide</Link></li>
                      </ul>
                      </div>
-                  </aside>
+                  </aside> */}
                   <div className="ps-sticky desktop">
                      <aside className="ps-widget--sidebar">
                      <div className="ps-widget__header">
