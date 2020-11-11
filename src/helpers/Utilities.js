@@ -20,3 +20,19 @@ export const removeScript = (scriptToremove) => {
         }    
     }
 }
+
+
+
+export const toNormalArrayObject = (arr) =>{
+    let arr_updated = [];
+    for (const [key, value] of Object.entries(arr)) {
+        arr_updated.push(value);
+    }
+    return arr_updated;
+}   
+
+export const fieldSorter = (fields) => (a, b) => fields.map(o => {
+    let dir = 1;
+    if (o[0] === '-') { dir = -1; o=o.substring(1); }
+    return a[o] > b[o] ? dir : a[o] < b[o] ? -(dir) : 0;
+}).reduce((p, n) => p ? p : n, 0);

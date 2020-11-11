@@ -8,13 +8,13 @@ import config from './../helpers/Config';
 const HeaderNav = () => {
 
     const dispatch = useDispatch();
-    const cartPId = useSelector( state => state.reloadCart);
+    const pID = useSelector( state => state.reloadCart);
 
     const [ qtyCounter, setQtyCounter ] = useState(0);
     const [ pIds, setPids ] = useState([]);
 
     const fecthDetail = async (pgroup_id) => {
-    
+        console.log(pgroup_id);
        if ( parseInt(pgroup_id)>0 ){
             const data = await fetch(
                 `${config.api_url}products/getById/${pgroup_id}`
@@ -29,14 +29,12 @@ const HeaderNav = () => {
     };
 
     useEffect( () => {
-
-        if ( cartPId !== ''){
-            const cartPId_arr = cartPId.toString().split('-');
-            fecthDetail(cartPId_arr[0]);
+        if ( pID !== ''){
+            const pIDArray = pID.toString().split('-');
+            const pgroup_id = pIDArray[0];
+            fecthDetail(pgroup_id);
         }
-
-
-    }, [cartPId] );
+    }, [pID]);
 
     return (
         <nav className="navigation">
