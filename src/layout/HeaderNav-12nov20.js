@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 
 import config from './../helpers/Config';
 //import { reloadCart } from './../actions';
@@ -17,23 +16,7 @@ const HeaderNav = () => {
     const fecthDetail = async (pgroup_id) => {
     
        if ( parseInt(pgroup_id)>0 ){
-
-                axios
-                .post(config.api_url+'products/list', { id: pgroup_id } )
-                .then( response => {
-                    let lists = response.data;
-                    lists = lists[pgroup_id];
-                    
-                    console.log(lists);
-                    //lists = toNormalArrayObject(lists);
-                    //lists = lists.sort(fieldSorter(['name']));
-
-                })
-                .catch(err => {
-                    
-                });
-                
-            /* const data = await fetch(
+            const data = await fetch(
                 `${config.api_url}products/getById/${pgroup_id}`
             );
 
@@ -41,7 +24,7 @@ const HeaderNav = () => {
                 let product_detail = await data.json();
                 product_detail = product_detail[pgroup_id];
                 console.log(product_detail);
-            }   */
+            }  
         }
     };
 

@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import jQuery from 'jquery';
-import MetaTags from 'react-meta-tags';
+import DocumentTitle  from 'react-document-title';
 
 import config from './../helpers/Config';
 import { appendScript }  from './../helpers/Utilities';
@@ -18,14 +18,8 @@ const ProductDetail = () => {
   },[]); 
 
     return (
-     
-        <Fragment>
-              <MetaTags>
-                <title>Product Detail</title>
-                <meta id="meta-description" name="description" content="Some description." />
-                <meta id="og-title" property="og:title" content="MyApp" />
-                <meta id="og-image" property="og:image" content="path/to/image.jpg" />
-              </MetaTags>
+      <DocumentTitle title="Product Detail">
+          <Fragment>
            <div className="ps-product--detail pt-60">
               <div className="ps-container">
                 <div className="row">
@@ -204,7 +198,8 @@ const ProductDetail = () => {
 
             <TopSales mask="RELATED ITEM" title="YOU MIGHT ALSO LIKE" />
 
-        </Fragment>
+          </Fragment>
+       </DocumentTitle>
     )
 }
 

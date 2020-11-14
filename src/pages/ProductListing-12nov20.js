@@ -4,7 +4,6 @@ import jQuery from 'jquery';
 import { createBrowserHistory } from 'history';
 import { Link, Redirect, useHistory  } from 'react-router-dom';
 import DocumentTitle  from 'react-document-title';
-import axios from 'axios';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { reloadCart } from '../actions';
@@ -26,7 +25,6 @@ const ProductListing = ({match}) => {
    });
    
    
-   const [currentPage, setCurrentPage] = useState(1);
    const [listSortBy, setListSortBy] = useState(0);
    const [filterValues, setFilterValues] = useState({});
    const [ productList, setProductList] = useState({});
@@ -60,7 +58,6 @@ const ProductListing = ({match}) => {
 
    const generateUrl = () => {
       let parameters = {};
-      let categoryIds = [];
 
       jQuery('ul[data-name].ps-list--checked > li.current').each(function (){
          
@@ -69,21 +66,10 @@ const ProductListing = ({match}) => {
          
         if ( name  in parameters){
             parameters[name] = parameters[name].concat(','+id);
-            if ( name ==='category' ){
-               categoryIds.push(id);
-            }
         }else{
             parameters[name] = id;
-            if ( name ==='category' ){
-               categoryIds.push(id);
-            }
         } 
 
-      });
-
-      // remove duplicates
-      categoryIds = categoryIds.filter(function(item, pos, self) {
-         return self.indexOf(item) == pos;
       });
 
       jQuery('.table.ps-table--size td.active').each(function (){
@@ -105,38 +91,39 @@ const ProductListing = ({match}) => {
 
       parameter_url = parameter_url.join(':');
       historyBrowser.push(`/product-listing/${parameter_url}`);
-
-      if (categoryIds.length>0){
-         fecthProductList( categoryIds.join(',') );
-      }else{
-         fecthProductList();
-      }
    }
 
-   const fecthProductList = async ( category_ids = '', page = 1 ) => {
+   const fecthProductList = async () => {
+      const data = await fetch( config.api_url+'products/list' );
+      let lists = await data.json();
 
-      let filterValuesArr = { page : page, limit : 10 };
-      if ( category_ids !== '' ){
-         filterValuesArr = { ...filterValuesArr, ...{ category_ids : category_ids } };
-      }
+      lists = toNormalArrayObject(lists);
+      lists = lists.sort(fieldSorter(['name']));
 
-      axios
-      .post(config.api_url+'products/list', filterValuesArr )
-      .then( response => {
-         let lists = response.data;
-
-         lists = toNormalArrayObject(lists);
-         lists = lists.sort(fieldSorter(['name']));
-
-         setProductList(lists);
-      })
-      .catch(err => {
-         
-      });
-      
+      setProductList(lists);
    }
 
-   const fecthCategoryList = async ( filterParams ) => {
+   const fecthCategoryList = async () => {
+
+      const filter_values = match.params.any;
+      if ( filter_values !== undefined ){
+
+         let filter_bygroup = filter_values.split(':');
+
+         let array_values_bygroup = {};
+         filter_bygroup.forEach( function( value, key ){
+
+            if ( !(value in array_values_bygroup)){
+               const name_values = value.split('-');
+               const name_attr = name_values[1].split(',');
+
+               name_attr.forEach( function (val_id){
+                  filterValues[name_values[0]] = name_attr;
+               });
+            }
+         });
+
+      }
 
       const data = await fetch( config.api_url+'categories/list' );
       let lists = await data.json();
@@ -145,8 +132,8 @@ const ProductListing = ({match}) => {
          const id = value.group_id;
 
          let classCurrent = '';
-         if ( 'category' in filterParams ){
-            if ( filterParams['category'].indexOf(id.toString())>=0 ){
+         if ( 'category' in filterValues ){
+            if ( filterValues['category'].indexOf(id.toString())>=0 ){
                classCurrent = 'current';
             }
          }
@@ -171,62 +158,11 @@ const ProductListing = ({match}) => {
       generateUrl();
    }
 
-   const paginatePage = (pageNum = 1 ) => {
-
-      if ( currentPage !== pageNum ){
-
-         let categories_ids = '';
-         if ( 'category' in filterValues ){
-            categories_ids = filterValues['category'].join(',').toString();
-         }
-
-         fecthProductList(categories_ids, pageNum );
-         setCurrentPage( pageNum );
-
-      }
-      
-   }
-   
-
-   const pushUrlFilters = () => {
-      const filter_values = match.params.any;
-      let filter_values_bycategory = {};
-
-      if ( filter_values !== undefined ){
-
-         let filter_bygroup = filter_values.split(':');
-
-         let array_values_bygroup = {};
-         filter_bygroup.forEach( function( value, key ){
-
-            if ( !(value in array_values_bygroup)){
-               const name_values = value.split('-');
-               const name_attr = name_values[1].split(',');
-
-               name_attr.forEach( function (val_id){
-                  filter_values_bycategory[name_values[0]] = name_attr;
-               });
-            }
-         });
-
-      }
-
-      return filter_values_bycategory;
-   }
-
    useEffect ( () => {
-      const filter_values_bycategory = pushUrlFilters();
-      //const filter_counter = Object.keys(filter_values_bycategory).length;
-      setFilterValues(filter_values_bycategory);
+      setFilterValues();
+      fecthProductList();
+      fecthCategoryList();
 
-      let categories_ids = '';
-      if ( 'category' in filter_values_bycategory ){
-         categories_ids = filter_values_bycategory['category'].join(',').toString();
-      }
-
-      fecthCategoryList( filter_values_bycategory );
-      fecthProductList(categories_ids);
-      
       jQuery('.zoomContainer').remove();
       appendScript(`${config.assets_url}js/main.js`);
 
@@ -253,8 +189,8 @@ const ProductListing = ({match}) => {
                      <div className="ps-pagination">
                         <ul className="pagination">
                            <li><a href="#"><i className="fa fa-angle-left"></i></a></li>
-                           <li className="active"><a href="#" onClick={ () => paginatePage(1) } >1</a></li>
-                           <li><a href="#" onClick={ () => paginatePage(2) } >2</a></li>
+                           <li className="active"><a href="#">1</a></li>
+                           <li><a href="#">2</a></li>
                            <li><a href="#">3</a></li>
                            <li><a href="#">...</a></li>
                            <li><a href="#"><i className="fa fa-angle-right"></i></a></li>
