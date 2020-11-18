@@ -1,44 +1,17 @@
 import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import DocumentTitle  from 'react-document-title';
-import axios from 'axios';
 
 import config from '../helpers/Config';
-import { appendScript, toNormalArrayObject  }  from '../helpers/Utilities';
-
+import { appendScript }  from '../helpers/Utilities';
 
 const Cart = () => {
 
    const location = useLocation(); // instead of props
    console.log(location);
 
-   const [ cartList, setCartList ] = useState([]);
-
-   
-   const orderList = async () => {
-      axios
-      .post(config.api_url+'orders/list' )
-      .then( response => {
-
-          let order_list = response.data
-
-          order_list = toNormalArrayObject(order_list);
-
-         /*  let total_quantity = 0;
-          order_list.forEach(value =>{
-              total_quantity = parseInt(total_quantity) + parseInt(value.quantity);
-          }); */
-
-          setCartList(order_list);
-      })
-      .catch(err => {
-          
-      });
-  };
-
    useEffect ( () => {
        appendScript(`${config.assets_url}js/main.js`);
-       orderList();
     },[]);  
     
     return (

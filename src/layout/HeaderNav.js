@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+//import jQuery from 'jquery';
 
 import config from './../helpers/Config';
+import { toNormalArrayObject }  from '../helpers/Utilities';
 //import { reloadCart } from './../actions';
 
 const HeaderNav = () => {
@@ -12,38 +14,77 @@ const HeaderNav = () => {
     const cartPId = useSelector( state => state.reloadCart);
 
     const [ qtyCounter, setQtyCounter ] = useState(0);
+    const [ cartList, setCartList ] = useState([]);
     const [ pIds, setPids ] = useState([]);
+
+    const udpatedCartQty = async () => {
+        axios
+        .post(config.api_url+'orders/list' )
+        .then( response => {
+
+            let order_list = response.data
+
+            order_list = toNormalArrayObject(order_list);
+
+            let total_quantity = 0;
+            order_list.forEach(value =>{
+                total_quantity = parseInt(total_quantity) + parseInt(value.quantity);
+            });
+
+            setQtyCounter(total_quantity);
+            setCartList(order_list);
+        })
+        .catch(err => {
+            
+        });
+    };
+
+    const deleteItem = ( e, pid ) => {
+
+        axios
+        .post(config.api_url+'orders/deleteById', { pids: pid } )
+        .then( response => {
+
+            let result = response.data
+            if ( result.status===1 ){
+                //jQuery(e.currentTarget).parent('.ps-cart-item').remove();
+                udpatedCartQty();
+            }
+
+        })
+        .catch(err => {
+            
+        });
+        
+        
+    }
 
     const fecthDetail = async (pgroup_id) => {
     
        if ( parseInt(pgroup_id)>0 ){
 
                 axios
-                .post(config.api_url+'products/list', { id: pgroup_id } )
+                .post(config.api_url+'orders/add_to_cart', { id: pgroup_id } )
                 .then( response => {
-                    let lists = response.data;
-                    lists = lists[pgroup_id];
+
+                    let result = response.data
                     
-                    console.log(lists);
-                    //lists = toNormalArrayObject(lists);
-                    //lists = lists.sort(fieldSorter(['name']));
+                    if ( result.status===1 ){
+                        udpatedCartQty();
+                    }
 
                 })
                 .catch(err => {
                     
                 });
-                
-            /* const data = await fetch(
-                `${config.api_url}products/getById/${pgroup_id}`
-            );
-
-            if (data.status==200){
-                let product_detail = await data.json();
-                product_detail = product_detail[pgroup_id];
-                console.log(product_detail);
-            }   */
         }
     };
+
+
+    useEffect( () => {
+        udpatedCartQty();
+
+    }, [] );
 
     useEffect( () => {
 
@@ -51,8 +92,6 @@ const HeaderNav = () => {
             const cartPId_arr = cartPId.toString().split('-');
             fecthDetail(cartPId_arr[0]);
         }
-
-
     }, [cartPId] );
 
     return (
@@ -155,30 +194,32 @@ const HeaderNav = () => {
                 <div className="ps-cart"><a className="ps-cart__toggle" href="#"><span><i>{qtyCounter}</i></span><i className="ps-icon-shopping-cart"></i></a>
                     <div className="ps-cart__listing">
                         <div className="ps-cart__content">
-                            <div className="ps-cart-item"><a className="ps-cart-item__close" href="#"></a>
-                                <div className="ps-cart-item__thumbnail"><a href="product-detail.html"></a><img src={`${config.assets_url}images/cart-preview/1.jpg`} alt="" /></div>
-                                    <div className="ps-cart-item__content"><a className="ps-cart-item__title" href="product-detail.html">Amazin’ Glazin’</a>
-                                    <p><span>Quantity:<i>12</i></span><span>Total:<i>£176</i></span></p>
-                                </div>
-                            </div>
-                            <div className="ps-cart-item"><a className="ps-cart-item__close" href="#"></a>
-                                <div className="ps-cart-item__thumbnail"><a href="product-detail.html"></a><img src={`${config.assets_url}images/cart-preview/2.jpg`} alt="" /></div>
-                                <div className="ps-cart-item__content"><a className="ps-cart-item__title" href="product-detail.html">The Crusty Croissant</a>
-                                <p><span>Quantity:<i>12</i></span><span>Total:<i>£176</i></span></p>
-                                </div>
-                            </div>
-                            <div className="ps-cart-item"><a className="ps-cart-item__close" href="#"></a>
-                                <div className="ps-cart-item__thumbnail"><a href="product-detail.html"></a><img src={`${config.assets_url}images/cart-preview/3.jpg`} alt="" /></div>
-                                <div className="ps-cart-item__content"><a className="ps-cart-item__title" href="product-detail.html">The Rolling Pin</a>
-                                <p><span>Quantity:<i>12</i></span><span>Total:<i>£176</i></span></p>
-                                </div>
-                            </div>
+
+                            { 
+                                ( qtyCounter===0 ) ?
+                                    (
+                                        <div>no item in cart!</div>
+                                    )
+                                    :
+                                    ( 
+                                        cartList.map( detail => (
+                                            <div key={detail.product_id} className="ps-cart-item">
+                                                <a className="ps-cart-item__close" href="#" onClick={ (e) => deleteItem(e, detail.product_id ) }></a>
+                                                <div className="ps-cart-item__thumbnail"><a href="product-detail.html"></a><img src={`https://picsum.photos/1000/1000?random=${detail.product_id}`} alt="" /></div>
+                                                <div className="ps-cart-item__content">
+                                                     <a className="ps-cart-item__title" href="product-detail.html">{ detail.name }</a>
+                                                     <p><span>Quantity:<i>{ detail.quantity }</i></span><span>Total:<i>£{ (detail.quantity*detail.price ) }</i></span></p>
+                                                </div>
+                                            </div>   
+                                        ))
+                                    )
+                            }
                         </div>
                         <div className="ps-cart__total">
-                            <p>Number of items:<span>36</span></p>
+                            <p>Number of items:<span>{qtyCounter}</span></p>
                             <p>Item Total:<span>£528.00</span></p>
                         </div>
-                        <div className="ps-cart__footer"><Link to="/cart" className="ps-btn" href="cart.html">Check out<i className="ps-icon-arrow-left"></i></Link></div>
+                        <div className="ps-cart__footer"><Link to={ { pathname : '/cart', state : { from : 'header nav' } }} className="ps-btn" href="cart.html">Check out<i className="ps-icon-arrow-left"></i></Link></div>
                     </div>
                 </div>
                 

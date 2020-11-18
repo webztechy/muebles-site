@@ -171,7 +171,7 @@ const ProductListing = ({match}) => {
       generateUrl();
    }
 
-   const paginatePage = (pageNum = 1 ) => {
+   const paginatePage = (e, pageNum = 1 ) => {
 
       if ( currentPage !== pageNum ){
 
@@ -182,8 +182,11 @@ const ProductListing = ({match}) => {
 
          fecthProductList(categories_ids, pageNum );
          setCurrentPage( pageNum );
-
+         
       }
+
+      jQuery(e.currentTarget).parent('li').siblings().removeClass('active');
+      jQuery(e.currentTarget).parent('li').addClass('active');
       
    }
    
@@ -253,8 +256,8 @@ const ProductListing = ({match}) => {
                      <div className="ps-pagination">
                         <ul className="pagination">
                            <li><a href="#"><i className="fa fa-angle-left"></i></a></li>
-                           <li className="active"><a href="#" onClick={ () => paginatePage(1) } >1</a></li>
-                           <li><a href="#" onClick={ () => paginatePage(2) } >2</a></li>
+                           <li className="active"><a href="#" onClick={ (e) => paginatePage(e, 1) } >1</a></li>
+                           <li><a href="#" onClick={ (e) => paginatePage(e, 2) } >2</a></li>
                            <li><a href="#">3</a></li>
                            <li><a href="#">...</a></li>
                            <li><a href="#"><i className="fa fa-angle-right"></i></a></li>
@@ -268,7 +271,7 @@ const ProductListing = ({match}) => {
                         <div className="ps-shoe mb-30">
                            <div className="ps-shoe__thumbnail">
                               <a className="ps-shoe__favorite" href="#" onClick={ () => addToCart(list.group_id) }><i className="ps-icon-heart"></i></a>
-                              <img src={`https://picsum.photos/1000/1000?random=${key}`} alt="" />
+                              <img src={`https://picsum.photos/1000/1000?random=${list.group_id}`} alt="" />
                               <Link to={`/product-detail/${list.group_id}`} className="ps-shoe__overlay"></Link>
                            </div>
                            <div className="ps-shoe__content">

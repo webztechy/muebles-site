@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import jQuery from 'jquery';
 import MetaTags from 'react-meta-tags';
 
@@ -9,11 +9,7 @@ import { appendScript }  from './../helpers/Utilities';
 import TopSales from './../sections/TopSales';
 
 
-const ProductDetail = ( match ) => {
-
-  const { id } = useParams(); // instead of match.params.id
-  console.log(id);
-  console.log(match);
+const ProductDetail = () => {
 
   useEffect ( () => {
     jQuery('.zoomContainer').remove();
