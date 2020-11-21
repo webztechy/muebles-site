@@ -4,14 +4,20 @@ import DocumentTitle  from 'react-document-title';
 import axios from 'axios';
 
 import config from '../helpers/Config';
-import { appendScript, toNormalArrayObject  }  from '../helpers/Utilities';
+import { appendScript, toNormalArrayObject, number_format  }  from '../helpers/Utilities';
+
+import { useSelector, useDispatch } from 'react-redux';
+import { reloadCart } from '../actions';
 
 
 const Cart = () => {
 
+   const dispatch = useDispatch();
+
    const location = useLocation(); // instead of props
    console.log(location);
 
+   const [ totalAmount, setTotalAmount ] = useState(0);
    const [ cartList, setCartList ] = useState([]);
 
    
@@ -24,17 +30,79 @@ const Cart = () => {
 
           order_list = toNormalArrayObject(order_list);
 
-         /*  let total_quantity = 0;
+          let total_quantity = 0;
+          let total_amount = 0;
           order_list.forEach(value =>{
-              total_quantity = parseInt(total_quantity) + parseInt(value.quantity);
-          }); */
+               total_quantity = parseInt(total_quantity) + parseInt(value.quantity);
+               total_amount = parseInt(total_quantity) * parseFloat(value.price);
+          });
 
+          setTotalAmount(total_amount);
           setCartList(order_list);
       })
       .catch(err => {
           
       });
   };
+
+
+   const throwToCart = async (pgroup_id) => {
+      const ts = Math.round((new Date()).getTime() / 1000)+'-'+Math.random()+'-list';
+      dispatch( reloadCart(pgroup_id+'-'+ts) );
+   }
+
+   
+   const addItem = ( e, pid ) => {
+      axios
+      .post(config.api_url+'orders/add_to_cart', { id: pid } )
+      .then( response => {
+
+         let result = response.data
+         
+         if ( result.status===1 ){
+            orderList();
+            throwToCart(pid);
+         }
+
+      })
+      .catch(err => {
+         
+      });
+   }
+
+
+   const minusItem = ( e, pid ) => {
+      axios
+      .post(config.api_url+'orders/add_to_cart', { id: pid, action : 'minus' } )
+      .then( response => {
+
+         let result = response.data
+         
+         if ( result.status===1 ){
+            orderList();
+            throwToCart(pid);
+         }
+
+      })
+      .catch(err => {
+         
+      });
+   }
+
+  const deleteItem = ( e, pid ) => {
+      axios
+      .post(config.api_url+'orders/deleteById', { pids: pid } )
+      .then( response => {
+         let result = response.data
+         if ( result.status===1 ){
+            orderList();
+            throwToCart(pid);
+         }
+      })
+      .catch(err => {
+         
+      });
+   }
 
    useEffect ( () => {
        appendScript(`${config.assets_url}js/main.js`);
@@ -57,51 +125,29 @@ const Cart = () => {
                      </tr>
                   </thead>
                   <tbody>
-                     <tr>
-                        <td><a className="ps-product__preview" href="product-detail.html"><img className="mr-15" src={`${config.assets_url}images/product/cart-preview/1.jpg`} alt="" /> air jordan One mid</a></td>
-                        <td>$150</td>
+
+                  { 
+                     cartList.map( detail => (
+                     <tr key={detail.product_id} >
                         <td>
-                        <div className="form-group--number">
-                           <button className="minus"><span>-</span></button>
-                           <input className="form-control" type="text" value="2" />
-                           <button className="plus"><span>+</span></button>
-                        </div>
+                              <a className="ps-product__preview" href="product-detail.html">
+                              <img className="mr-15" src={`https://picsum.photos/1000/1000?random=${detail.product_id}`}  alt="" width="100" height="100" />{ detail.name }</a>
                         </td>
-                        <td>$300</td>
+                        <td>${ number_format(detail.price) }</td>
                         <td>
-                        <div className="ps-remove"></div>
+                           <div className="form-group--number">
+                              <button className="minus" onClick={ (e) => minusItem(e, detail.product_id ) }><span>-</span></button>
+                              <input className="form-control" type="text" value={ detail.quantity } readOnly />
+                              <button className="plus" onClick={ (e) => addItem(e, detail.product_id ) }><span>+</span></button>
+                           </div>
                         </td>
-                     </tr>
-                     <tr>
-                        <td><a className="ps-product__preview" href="product-detail.html"><img className="mr-15" src={`${config.assets_url}images/product/cart-preview/2.jpg`} alt="" /> The Crusty Croissant</a></td>
-                        <td>$150</td>
+                        <td>${ number_format( (detail.quantity*detail.price ) ) }</td>
                         <td>
-                        <div className="form-group--number">
-                           <button className="minus"><span>-</span></button>
-                           <input className="form-control" type="text" value="2" />
-                           <button className="plus"><span>+</span></button>
-                        </div>
-                        </td>
-                        <td>$300</td>
-                        <td>
-                        <div className="ps-remove"></div>
+                           <div className="ps-remove" onClick={ (e) => deleteItem(e, detail.product_id ) }></div>
                         </td>
                      </tr>
-                     <tr>
-                        <td><a className="ps-product__preview" href="product-detail.html"><img className="mr-15" src={`${config.assets_url}images/product/cart-preview/3.jpg`} alt="" />The Rolling Pin</a></td>
-                        <td>$150</td>
-                        <td>
-                        <div className="form-group--number">
-                           <button className="minus"><span>-</span></button>
-                           <input className="form-control" type="text" value="2" />
-                           <button className="plus"><span>+</span></button>
-                        </div>
-                        </td>
-                        <td>$300</td>
-                        <td>
-                        <div className="ps-remove"></div>
-                        </td>
-                     </tr>
+                     ))
+                  }
                   </tbody>
                   </table>
                   <div className="ps-cart__actions">
@@ -112,11 +158,11 @@ const Cart = () => {
                         </div>
                      </div>
                      <div className="form-group">
-                        <button className="ps-btn ps-btn--gray">Continue Shopping</button>
+                        <Link to="/product-listing" className="ps-btn ps-btn--gray">Continue Shopping</Link>
                      </div>
                   </div>
                   <div className="ps-cart__total">
-                     <h3>Total Price: <span> 2599.00 $</span></h3><Link to="/checkout" className="ps-btn">Process to checkout<i className="ps-icon-next"></i></Link>
+                     <h3>Total Price: <span> { number_format(totalAmount) } $</span></h3><Link to="/checkout" className="ps-btn">Process to checkout<i className="ps-icon-next"></i></Link>
                   </div>
                   </div>
                </div>

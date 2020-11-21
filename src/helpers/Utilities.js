@@ -21,7 +21,25 @@ export const removeScript = (scriptToremove) => {
     }
 }
 
+export const  isEmpty = (s) => {   
+	return ((s == null) || (s.length == 0));
+}
 
+export const  numberWithCommas = (x, symbol = ',') => {
+	return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, symbol);
+}
+
+export const  numberFormat = (number, digit) => {
+	let decimal = 2;
+	if( !isEmpty(digit) ){ decimal =  digit; } 
+	return parseFloat(number).toFixed(decimal.toString());
+}
+
+export const  number_format = (number, digit, symbol = ',') => {
+	number = numberFormat(number, digit);
+	number = numberWithCommas(number, symbol);
+	return number;
+}
 
 export const toNormalArrayObject = (arr) =>{
     let arr_updated = [];

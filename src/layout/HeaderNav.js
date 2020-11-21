@@ -5,7 +5,7 @@ import axios from 'axios';
 //import jQuery from 'jquery';
 
 import config from './../helpers/Config';
-import { toNormalArrayObject }  from '../helpers/Utilities';
+import { toNormalArrayObject, number_format }  from '../helpers/Utilities';
 //import { reloadCart } from './../actions';
 
 const HeaderNav = () => {
@@ -13,6 +13,7 @@ const HeaderNav = () => {
     const dispatch = useDispatch();
     const cartPId = useSelector( state => state.reloadCart);
 
+    const [ totalAmount, setTotalAmount ] = useState(0);
     const [ qtyCounter, setQtyCounter ] = useState(0);
     const [ cartList, setCartList ] = useState([]);
     const [ pIds, setPids ] = useState([]);
@@ -27,10 +28,13 @@ const HeaderNav = () => {
             order_list = toNormalArrayObject(order_list);
 
             let total_quantity = 0;
+            let total_amount = 0;
             order_list.forEach(value =>{
                 total_quantity = parseInt(total_quantity) + parseInt(value.quantity);
+                total_amount = parseInt(total_quantity) * parseFloat(value.price);
             });
 
+            setTotalAmount(total_amount);
             setQtyCounter(total_quantity);
             setCartList(order_list);
         })
@@ -55,7 +59,6 @@ const HeaderNav = () => {
         .catch(err => {
             
         });
-        
         
     }
 
@@ -90,7 +93,19 @@ const HeaderNav = () => {
 
         if ( cartPId !== ''){
             const cartPId_arr = cartPId.toString().split('-');
-            fecthDetail(cartPId_arr[0]);
+           
+
+            if ( cartPId_arr.length>1 ){
+
+                const pid = cartPId_arr[0];
+                const action = cartPId_arr[3].toString().toLowerCase();
+                if ( action=='add'){
+                    fecthDetail(cartPId_arr[0]);
+
+                }else if ( action=='list'){
+                    udpatedCartQty();
+                }
+            }
         }
     }, [cartPId] );
 
@@ -208,7 +223,7 @@ const HeaderNav = () => {
                                                 <div className="ps-cart-item__thumbnail"><a href="product-detail.html"></a><img src={`https://picsum.photos/1000/1000?random=${detail.product_id}`} alt="" /></div>
                                                 <div className="ps-cart-item__content">
                                                      <a className="ps-cart-item__title" href="product-detail.html">{ detail.name }</a>
-                                                     <p><span>Quantity:<i>{ detail.quantity }</i></span><span>Total:<i>£{ (detail.quantity*detail.price ) }</i></span></p>
+                                                     <p><span>Quantity:<i>{ detail.quantity }</i></span><span>Total:<i>£{ number_format( (detail.quantity*detail.price ) ) }</i></span></p>
                                                 </div>
                                             </div>   
                                         ))
@@ -217,7 +232,7 @@ const HeaderNav = () => {
                         </div>
                         <div className="ps-cart__total">
                             <p>Number of items:<span>{qtyCounter}</span></p>
-                            <p>Item Total:<span>£528.00</span></p>
+                            <p>Item Total:<span>£{ number_format(totalAmount) }</span></p>
                         </div>
                         <div className="ps-cart__footer"><Link to={ { pathname : '/cart', state : { from : 'header nav' } }} className="ps-btn" href="cart.html">Check out<i className="ps-icon-arrow-left"></i></Link></div>
                     </div>

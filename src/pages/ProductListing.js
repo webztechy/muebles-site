@@ -162,7 +162,7 @@ const ProductListing = ({match}) => {
 
 
    const addToCart = async (pgroup_id) => {
-      const ts = Math.round((new Date()).getTime() / 1000)+'-'+Math.random();
+      const ts = Math.round((new Date()).getTime() / 1000)+'-'+Math.random()+'-add';
       dispatch( reloadCart(pgroup_id+'-'+ts) );
    }
 
